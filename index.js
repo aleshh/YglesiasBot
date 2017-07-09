@@ -21,26 +21,75 @@ var T = new Twit({
 //   console.log(data)
 // })
 
-console.log('Yglesias Bot: up and running')
+function timeStamp(t) {
 
-var scanTweets = function() {
+  if (!t) var t = new Date()
+  if (!t instanceof Date) t = new Date()
 
-  console.log('Yglesias Bot: scanning Tweets')
+  var s = t.getFullYear() + '-'
+  s += ('0' + t.getMonth()).slice(-2) + '-'
+  s += ('0' + t.getDate()).slice(-2) + ' '
+
+  var hour = t.getHours()
+  var pm = false
+
+  if (hour > 11) {
+    pm = true
+    hour = hour - 12
+  }
+  if (hour == 0) hour = 12
+
+  s += ('0' + hour).slice(-2) + ':' + t.getMinutes()
+  s += pm ? 'pm' : 'am'
+
+  return s
+
+}
+
+function scanTweets() {
+
+  console.log('\n\n', timeStamp(), 'Yglesias Bot: scanning Tweets')
 
   T.get('statuses/user_timeline', {
       screen_name: 'mattyglesias',
-      count: 100,
+      count: 1,
       trim_user: true,
       exclude_replies: true
     }, function(err, data, response) {
 
-        console.log(data.length)
+        console.log('number of tweets downloaded: ', data.length)
         // console.log(data)
         data.forEach(function(tweet) {
-          console.log('tweet (', tweet.favorite_count, '): ', tweet.text)
+          console.log('tweet (' + tweet.favorite_count + '): ' + tweet.text)
+
+
         })
     })
 }
 
-// run once a minute
-setTimeout(scanTweets(), 60000)
+//run on startup
+console.log('\n\n', timeStamp(), 'Yglesias Bot: up and running')
+
+var blah = new Date()
+
+console.log('blah: ', timeStamp(blah))
+
+var msMinute = 60 * 1000
+var msHour =   60 * msMinute
+
+var meh = blah.getTime() - (msMinute * 5)
+// var meh = blah.getTime() - (msMinute * 4)
+
+
+var bleh = new Date(meh)
+
+
+console.log('bleh2: ', timeStamp(bleh))
+
+
+
+
+// scanTweets()
+
+// // run once a minute
+// setInterval(scanTweets, 60000)
