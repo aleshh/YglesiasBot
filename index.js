@@ -2,6 +2,10 @@ var Twit = require('twit')
 var cred = require('./credentials.js')
 
 var minFavs = 50
+var favCounts = []
+
+// var followee = 575930104 // metaphor a minute
+var followee = 15446531  // matt yglesias
 
 var T = new Twit({
   consumer_key:         cred.consumer_key,
@@ -39,60 +43,64 @@ function timeStamp(t) {
   }
   if (hour == 0) hour = 12
 
-  s += ('0' + hour).slice(-2) + ':' + t.getMinutes()
+  s += ('0' + hour).slice(-2) + ':'
+  s += ('0' + t.getMinutes()).slice(-2)
+  //s += ':' + ('0' + t.getSeconds()).slice(-2)
   s += pm ? 'pm' : 'am'
 
   return s
 
 }
 
-function scanTweets() {
+// function scanTweets() {
 
-  console.log('\n\n', timeStamp(), 'Yglesias Bot: scanning Tweets')
+//   console.log('\n\n', timeStamp(), 'Yglesias Bot: scanning Tweets')
 
-  T.get('statuses/user_timeline', {
-      screen_name: 'metaphorminute',
-      count: 1,
-      trim_user: true,
-      exclude_replies: true
-    }, function(err, data, response) {
+//   T.get('statuses/user_timeline', {
+//       screen_name: 'metaphorminute',
+//       count: 1,
+//       trim_user: true,
+//       exclude_replies: true
+//     }, function(err, data, response) {
 
-        console.log('number of tweets downloaded: ', data.length)
-        // console.log(data)
-        data.forEach(function(tweet) {
-          console.log('scan: ' +tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text + ' id: ' + tweet.id)
-        })
-    })
-}
+//         console.log('number of tweets downloaded: ', data.length)
+//         // console.log(data)
+//         data.forEach(function(tweet) {
+//           console.log('scan: ' +tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text + ' id: ' + tweet.id)
+//         })
+//     })
+// }
+
 
 function getTweetById(statusId) {
-  // var id = '884365593075478528'
-
-  // https://twitter.com/statuses/884365593075478528
-
   T.get('statuses/show/:id', { id: statusId }, function(err, tweet) {
-    // console.log('\n\nid           : "' + statusId + '" ' + typeof id)
     if (err) console.log('ERROR FROM TWITTER: ' + err )
-    // console.log('test data    : ' + tweet.text )
-    // console.log('test response: ' + response )
+
     console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
   })
 }
 
-// 575930104 metaphor a minute
-// 15446531  matt yglesias
 
-var stream = T.stream('statuses/filter', { follow: 15446531 })
+var stream = T.stream('statuses/filter', { follow: followee })
 
 stream.on('message', function (tweet) {
   // console.log('stream: ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
 
-  setTimeout(function() {
-    // console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
+  // twitter will stream user's tweets and others' retweets
+  // we only want the user's tweets
+  var notRetweet = (tweet.user.id == followee)
 
-    getTweetById(tweet.id_str)
+  // we also want to ignore our target's @replies to others
+  var notAtReply = (tweet.text.slice(0,1) != '@')
 
-  }, (5 * 60 * 1000)) // 5 minutes
+  if (notRetweet && notAtReply) {
+    setTimeout(function() {
+      // console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
+
+      getTweetById(tweet.id_str)
+
+    }, (5 * 60 * 1000)) // 5 minutes
+  }
 
 })
 
