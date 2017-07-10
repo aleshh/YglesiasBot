@@ -51,7 +51,7 @@ function scanTweets() {
   console.log('\n\n', timeStamp(), 'Yglesias Bot: scanning Tweets')
 
   T.get('statuses/user_timeline', {
-      screen_name: 'mattyglesias',
+      screen_name: 'metaphorminute',
       count: 1,
       trim_user: true,
       exclude_replies: true
@@ -60,36 +60,62 @@ function scanTweets() {
         console.log('number of tweets downloaded: ', data.length)
         // console.log(data)
         data.forEach(function(tweet) {
-          console.log('tweet (' + tweet.favorite_count + '): ' + tweet.text)
-
-
+          console.log('scan: ' +tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text + ' id: ' + tweet.id)
         })
     })
 }
 
+function getTweetById(statusId) {
+  // var id = '884365593075478528'
+
+  // https://twitter.com/statuses/884365593075478528
+
+  T.get('statuses/show/:id', { id: statusId }, function(err, tweet) {
+    // console.log('\n\nid           : "' + statusId + '" ' + typeof id)
+    if (err) console.log('ERROR FROM TWITTER: ' + err )
+    // console.log('test data    : ' + tweet.text )
+    // console.log('test response: ' + response )
+    console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
+  })
+}
+
+// 575930104 metaphor a minute
+// 15446531  matt yglesias
+
+var stream = T.stream('statuses/filter', { follow: 15446531 })
+
+stream.on('message', function (tweet) {
+  // console.log('stream: ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
+
+  setTimeout(function() {
+    // console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
+
+    getTweetById(tweet.id_str)
+
+  }, (5 * 60 * 1000)) // 5 minutes
+
+})
+
+
+
 //run on startup
 console.log('\n\n', timeStamp(), 'Yglesias Bot: up and running')
 
-var blah = new Date()
+// var blah = new Date()
 
-console.log('blah: ', timeStamp(blah))
+// console.log('blah: ', timeStamp(blah))
 
 var msMinute = 60 * 1000
 var msHour =   60 * msMinute
 
-var meh = blah.getTime() - (msMinute * 5)
-// var meh = blah.getTime() - (msMinute * 4)
+// var fiveMinsAgo = new Date(blah.getTime() - (msMinute * 5))
+
+// console.log('bleh2: ', timeStamp(fiveMinsAgo))
 
 
-var bleh = new Date(meh)
-
-
-console.log('bleh2: ', timeStamp(bleh))
-
-
-
+// getTweetById()
 
 // scanTweets()
 
 // // run once a minute
-// setInterval(scanTweets, 60000)
+// setInterval(scanTweets, 120000)
