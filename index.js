@@ -69,9 +69,15 @@ stream.on('message', function (tweet) {
         console.log('favCounts: ' + favCounts)
 
         favCountsTmp = favCounts
-        favCountsTmp.sort();
+        // favCountsTmp.sort();
 
-        console.log(tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text.slice(0,20))
+        // sort the array numerically
+        favCountsTmp.sort(function(a,b) {return a - b})
+
+        console.log('favCounts sorted: ' + favCountsTmp)
+        console.log('favCounts 17th: ' + favCountsTmp[16])
+
+        console.log(tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text.slice(0,40))
 
         if (tweet.favorite_count > favCountsTmp[15]) {
           console.log(tweet.favorite_count + ' > ' + favCounts[3] +'!: RETWEETED!')
