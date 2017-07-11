@@ -1,10 +1,11 @@
+//  https://www.npmjs.com/package/twit
+//  https://dev.twitter.com/rest/reference/get/statuses/user_timeline
+
 var Twit = require('twit')
 var cred = require('./credentials.js')
 
-var minFavs = 50
 var favCounts = [73, 52, 17, 47, 35, 47, 64, 104, 57, 17, 87, 10, 69, 67, 20, 121, 133, 22, 23, 50]
 
-// var followee = 575930104 // metaphor a minute
 var followee = 15446531  // matt yglesias
 
 var T = new Twit({
@@ -15,15 +16,6 @@ var T = new Twit({
   timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
 })
 
-//  https://www.npmjs.com/package/twit
-//  https://dev.twitter.com/rest/reference/get/statuses/user_timeline
-
-//
-//  retweet a tweet with id '343360866131001345'
-//
-// T.post('statuses/retweet/:id', { id: '343360866131001345' }, function (err, data, response) {
-//   console.log(data)
-// })
 
 function timeStamp(t) {
 
@@ -51,35 +43,6 @@ function timeStamp(t) {
   return s
 
 }
-
-// function scanTweets() {
-
-//   console.log('\n\n', timeStamp(), 'Yglesias Bot: scanning Tweets')
-
-//   T.get('statuses/user_timeline', {
-//       screen_name: 'metaphorminute',
-//       count: 1,
-//       trim_user: true,
-//       exclude_replies: true
-//     }, function(err, data, response) {
-
-//         console.log('number of tweets downloaded: ', data.length)
-//         // console.log(data)
-//         data.forEach(function(tweet) {
-//           console.log('scan: ' +tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text + ' id: ' + tweet.id)
-//         })
-//     })
-// }
-
-
-// function getTweetById(statusId) {
-//   T.get('statuses/show/:id', { id: statusId }, function(err, tweet) {
-//     if (err) console.log('ERROR FROM TWITTER: ' + err )
-
-//     console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
-//   })
-// }
-
 
 var stream = T.stream('statuses/filter', { follow: followee })
 
@@ -141,21 +104,3 @@ stream.on('message', function (tweet) {
 //run on startup
 console.log('\n\n', timeStamp(), 'Yglesias Bot: up and running')
 
-// var blah = new Date()
-
-// console.log('blah: ', timeStamp(blah))
-
-var msMinute = 60 * 1000
-var msHour =   60 * msMinute
-
-// var fiveMinsAgo = new Date(blah.getTime() - (msMinute * 5))
-
-// console.log('bleh2: ', timeStamp(fiveMinsAgo))
-
-
-// getTweetById()
-
-// scanTweets()
-
-// // run once a minute
-// setInterval(scanTweets, 120000)
