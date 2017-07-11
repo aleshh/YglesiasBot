@@ -2,7 +2,7 @@ var Twit = require('twit')
 var cred = require('./credentials.js')
 
 var minFavs = 50
-var favCounts = []
+var favCounts = [73, 52, 17, 47, 35, 47, 64, 104, 57, 17, 87, 10, 69, 67, 20, 121, 133, 22, 23, 50]
 
 // var followee = 575930104 // metaphor a minute
 var followee = 15446531  // matt yglesias
@@ -72,13 +72,13 @@ function timeStamp(t) {
 // }
 
 
-function getTweetById(statusId) {
-  T.get('statuses/show/:id', { id: statusId }, function(err, tweet) {
-    if (err) console.log('ERROR FROM TWITTER: ' + err )
+// function getTweetById(statusId) {
+//   T.get('statuses/show/:id', { id: statusId }, function(err, tweet) {
+//     if (err) console.log('ERROR FROM TWITTER: ' + err )
 
-    console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
-  })
-}
+//     console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
+//   })
+// }
 
 
 var stream = T.stream('statuses/filter', { follow: followee })
@@ -97,7 +97,14 @@ stream.on('message', function (tweet) {
     setTimeout(function() {
       // console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
 
-      getTweetById(tweet.id_str)
+      // getTweetById(tweet.id_str)
+
+      T.get('statuses/show/:id', { id: tweet.id_str }, function(err, tweet) {
+        if (err) console.log('ERROR FROM TWITTER: ' + err )
+
+        console.log('+5min : (' + tweet.favorite_count + '): ' + tweet.text)
+        // console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
+      })
 
     }, (5 * 60 * 1000)) // 5 minutes
   }
