@@ -1,3 +1,10 @@
+//
+// Yglesias Bot
+//
+// retweets the top 20% of a user's tweets based on number of favorites
+// after 5 minutes
+
+
 //  https://www.npmjs.com/package/twit
 //  https://dev.twitter.com/rest/reference/get/statuses/user_timeline
 
@@ -58,29 +65,27 @@ stream.on('message', function (tweet) {
 
   if (notRetweet && notAtReply) {
     setTimeout(function() {
-      // console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
-
-      // getTweetById(tweet.id_str)
 
       T.get('statuses/show/:id', { id: tweet.id_str }, function(err, tweet) {
         if (err) console.log('ERROR FROM TWITTER: ' + err )
 
-
         console.log('favCounts: ' + favCounts)
 
-        favCountsTmp = favCounts
+        var favCountsTmp = favCounts
         // favCountsTmp.sort();
 
         // sort the array numerically
         favCountsTmp.sort(function(a,b) {return a - b})
 
+        var numberToBeat = favCountsTmp[16]
+
         console.log('favCounts sorted: ' + favCountsTmp)
-        console.log('favCounts 17th: ' + favCountsTmp[16])
+        console.log('number to beat: ' + numberToBeat)
 
         console.log(tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text.slice(0,40))
 
-        if (tweet.favorite_count > favCountsTmp[15]) {
-          console.log(tweet.favorite_count + ' > ' + favCounts[3] +'!: RETWEETED!')
+        if (tweet.favorite_count > numberToBeat) {
+          console.log(tweet.favorite_count + ' > ' + numberToBeat +'!: RETWEETED!')
 
           T.post('statuses/retweet/:id', { id: tweet.id_str }, function (err, data, response) {
             if (err) console.log('Retweeting Error: ' + err)
@@ -88,7 +93,7 @@ stream.on('message', function (tweet) {
           })
 
         } else {
-          console.log(tweet.favorite_count + ' < ' + favCounts[3] +'!: NOT RETWEETED')
+          console.log(tweet.favorite_count + ' < ' + numberToBeat +'!: NOT RETWEETED')
         }
 
         console.log('\n')
@@ -108,5 +113,5 @@ stream.on('message', function (tweet) {
 
 
 //run on startup
-console.log('\n\n', timeStamp(), 'Yglesias Bot: up and running')
+console.log('\n\n', timeStamp(), 'Yglesias Bot: up and running\n\n')
 
