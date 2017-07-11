@@ -102,15 +102,40 @@ stream.on('message', function (tweet) {
       T.get('statuses/show/:id', { id: tweet.id_str }, function(err, tweet) {
         if (err) console.log('ERROR FROM TWITTER: ' + err )
 
-        console.log('+5min : (' + tweet.favorite_count + '): ' + tweet.text)
-        // console.log('+5min : ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
+
+        console.log('favCounts: ' + favCounts)
+
+        favCountsTmp = favCounts
+        favCountsTmp.sort();
+
+        console.log(tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text.slice(0,20))
+
+        if (tweet.favorite_count > favCountsTmp[15]) {
+          console.log(tweet.favorite_count + ' > ' + favCounts[3] +'!: RETWEETED!')
+
+          T.post('statuses/retweet/:id', { id: tweet.id_str }, function (err, data, response) {
+            if (err) console.log('Retweeting Error: ' + err)
+            console.log('Retweeting: ' + data)
+          })
+
+        } else {
+          console.log(tweet.favorite_count + ' < ' + favCounts[3] +'!: NOT RETWEETED')
+        }
+
+        console.log('\n')
+
+        // add the new favorite and trim the stack
+        favCounts.push(tweet.favorite_count);
+        while (favCounts.length > 20) {
+          favCounts.splice(0, 1)
+        }
+
       })
 
     }, (5 * 60 * 1000)) // 5 minutes
   }
 
 })
-
 
 
 //run on startup
