@@ -1,19 +1,31 @@
-//
-// Yglesias Bot
-//
-// retweets the top 20% of a user's tweets based on number of favorites
-// after 5 minutes
-
-
-//  https://www.npmjs.com/package/twit
-//  https://dev.twitter.com/rest/reference/get/statuses/user_timeline
+/*
+ *  Yglesias Bot
+ *
+ *  Retweets the top 20% of a user's tweets based on number of favorites
+ *  after 5 minutes.
+ *
+ *  Sucks down the user's stream, sets a 5-minute wait for non RT's or @ replies
+ *  then compares the number of favorites to the last 20 tweets. If the tweet
+ *  has gotten more than the top 4, it's retweeted. Repurposing this for another
+ *  account should be as easy as plugging in new Twitter credentials and
+ *  changing the followee ID.
+ *
+ *  Created by Alesh Houdek, http: *projects.alesh.com
+ *
+ *  References
+ *
+ *  https:www.npmjs.com/package/twit
+ *  https:dev.twitter.com/rest/reference/get/statuses/user_timeline
+ *
+ */
 
 var Twit = require('twit')
 var cred = require('./credentials.js')
 
-var favCounts = [73, 52, 17, 47, 35, 47, 64, 104, 57, 17, 87, 10, 69, 67, 20, 121, 133, 22, 23, 50]
-
 var followee = 15446531  // matt yglesias
+
+// just some seed values to start with
+var favCounts = [73, 52, 17, 47, 35, 47, 64, 104, 57, 17, 87, 10, 69, 67, 20, 121, 133, 22, 23, 50]
 
 var T = new Twit({
   consumer_key:         cred.consumer_key,
@@ -23,38 +35,13 @@ var T = new Twit({
   timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
 })
 
+//run on startup
+console.log('\n\n', 'Yglesias Bot: up and running\n\n')
 
-function timeStamp(t) {
-
-  if (!t) var t = new Date()
-  if (!t instanceof Date) t = new Date()
-
-  var s = t.getFullYear() + '-'
-  s += ('0' + t.getMonth()).slice(-2) + '-'
-  s += ('0' + t.getDate()).slice(-2) + ' '
-
-  var hour = t.getHours()
-  var pm = false
-
-  if (hour > 11) {
-    pm = true
-    hour = hour - 12
-  }
-  if (hour == 0) hour = 12
-
-  s += ('0' + hour).slice(-2) + ':'
-  s += ('0' + t.getMinutes()).slice(-2)
-  //s += ':' + ('0' + t.getSeconds()).slice(-2)
-  s += pm ? 'pm' : 'am'
-
-  return s
-
-}
 
 var stream = T.stream('statuses/filter', { follow: followee })
 
 stream.on('message', function (tweet) {
-  // console.log('stream: ' + tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text)
 
   // twitter will stream user's tweets and others' retweets
   // we only want the user's tweets
@@ -110,8 +97,3 @@ stream.on('message', function (tweet) {
   }
 
 })
-
-
-//run on startup
-console.log('\n\n', timeStamp(), 'Yglesias Bot: up and running\n\n')
-
