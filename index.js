@@ -58,8 +58,8 @@ stream.on('message', function (tweet) {
 
         console.log('favCounts: ' + favCounts)
 
-        var favCountsTmp = favCounts
-        // favCountsTmp.sort();
+        // pass array by value
+        var favCountsTmp = favCounts.slice()
 
         // sort the array numerically
         favCountsTmp.sort(function(a,b) {return a - b})
