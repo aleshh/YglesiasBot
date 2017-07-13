@@ -10,7 +10,7 @@
  *  account should be as easy as plugging in new Twitter credentials and
  *  changing the followee ID.
  *
- *  Created by Alesh Houdek, http: *projects.alesh.com
+ *  Created by Alesh Houdek, http:projects.alesh.com
  *
  *  References
  *
@@ -21,11 +21,16 @@
 
 var Twit = require('twit')
 var cred = require('./credentials.js')
+const util = require('util')
+
+
 
 var followee = 15446531  // matt yglesias
+var initialLikeThreshold = 90
 
 // just some seed values to start with
-var favCounts = [73, 52, 17, 47, 35, 47, 64, 104, 57, 17, 87, 10, 69, 67, 20, 121, 133, 22, 23, 50]
+// var favCounts = [73, 52, 17, 47, 35, 47, 64, 104, 57, 17, 87, 10, 69, 67, 20, 121, 133, 22, 23, 50]
+var favCounts = Array(20).fill(initialLikeThreshold)
 
 var T = new Twit({
   consumer_key:         cred.consumer_key,
@@ -42,6 +47,13 @@ console.log('\n\n', 'Yglesias Bot: up and running\n\n')
 var stream = T.stream('statuses/filter', { follow: followee })
 
 stream.on('message', function (tweet) {
+
+  // console.log( tweet.toString())
+
+  if (!tweet.user) {
+    console.log('\n\n\n\n\nERROR ON this TWEET:')
+    console.log(util.inspect(tweet, {showHidden: false, depth: null}))
+  }
 
   // twitter will stream user's tweets and others' retweets
   // we only want the user's tweets
