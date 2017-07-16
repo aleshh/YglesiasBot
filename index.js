@@ -48,12 +48,15 @@ var stream = T.stream('statuses/filter', { follow: followee })
 
 stream.on('message', function (tweet) {
 
-  // console.log( tweet.toString())
 
-  if (!tweet.user) {
-    console.log('\n\n\n\n\nERROR ON this TWEET:')
-    console.log(util.inspect(tweet, {showHidden: false, depth: null}))
-  }
+
+  // if (!tweet.user) {
+  //   console.log('\n\n\n\n\nERROR ON this TWEET:')
+  //   console.log(util.inspect(tweet, {showHidden: false, depth: null}))
+  // }
+
+  // if the tweet has been deleted
+  var tweetNotDeleted = (tweet.user) ? true : false;
 
   // twitter will stream user's tweets and others' retweets
   // we only want the user's tweets
@@ -62,7 +65,7 @@ stream.on('message', function (tweet) {
   // we also want to ignore our target's @replies to others
   var notAtReply = (tweet.text.slice(0,1) != '@')
 
-  if (notRetweet && notAtReply) {
+  if (notRetweet && notAtReply && tweetNotDeleted) {
     setTimeout(function() {
 
       T.get('statuses/show/:id', { id: tweet.id_str }, function(err, tweet) {
