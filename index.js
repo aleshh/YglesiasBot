@@ -21,16 +21,16 @@
 
 var Twit = require('twit')
 var cred = require('./credentials.js')
-const util = require('util')
-
-
+var util = require('util')
 
 var followee = 15446531  // matt yglesias
+
 var initialLikeThreshold = 90
+var likesBuffer = 5
+var tweetPercent = .2
 
 // just some seed values to start with
-// var favCounts = [73, 52, 17, 47, 35, 47, 64, 104, 57, 17, 87, 10, 69, 67, 20, 121, 133, 22, 23, 50]
-var favCounts = Array(20).fill(initialLikeThreshold)
+var favCounts = Array(likesBuffer).fill(initialLikeThreshold)
 
 var T = new Twit({
   consumer_key:         cred.consumer_key,
@@ -41,14 +41,12 @@ var T = new Twit({
 })
 
 //run on startup
-console.log('\n\n', 'Yglesias Bot: up and running\n\n')
+console.log('\n\nYglesias Bot: up and running\n\n')
 
 
 var stream = T.stream('statuses/filter', { follow: followee })
 
 stream.on('message', function (tweet) {
-
-
 
   // if (!tweet.user) {
   //   console.log('\n\n\n\n\nERROR ON this TWEET:')
@@ -79,14 +77,16 @@ stream.on('message', function (tweet) {
         // sort the array numerically
         favCountsTmp.sort(function(a,b) {return a - b})
 
-        var numberToBeat = favCountsTmp[16]
+        var numbertoBeatIndex = likesBuffer - (likesBuffer * tweetPercent)
+
+        var numberToBeat = favCountsTmp[numbertoBeatIndex]
 
         console.log('favCounts sorted: ' + favCountsTmp)
         console.log('number to beat: ' + numberToBeat)
 
         console.log(tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text.slice(0,40))
 
-        if (tweet.favorite_count > numberToBeat) {
+        if (tweet.favorite_count >= numberToBeat) {
           console.log(tweet.favorite_count + ' > ' + numberToBeat +'!: RETWEETED!')
 
           T.post('statuses/retweet/:id', { id: tweet.id_str }, function (err, data, response) {
