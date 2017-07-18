@@ -23,13 +23,20 @@ var Twit = require('twit')
 var cred = require('./credentials.js')
 var util = require('util')
 
+
+// twitter ID
 var followee = 15446531  // matt yglesias
 
-var initialLikeThreshold = 90
-var likesBuffer = 5
+// in the long run, should tweet this percent of the user's tweets
 var tweetPercent = .2
 
-// just some seed values to start with
+// the larger the buffer the slower the responsiveness to time of day etc.
+var likesBuffer = 8
+
+// value for initial buffer population
+var initialLikeThreshold = 80
+
+// populate the buffer
 var favCounts = Array(likesBuffer).fill(initialLikeThreshold)
 
 var T = new Twit({
@@ -43,7 +50,6 @@ var T = new Twit({
 //run on startup
 console.log('\n\nYglesias Bot: up and running\n\n')
 
-
 var stream = T.stream('statuses/filter', { follow: followee })
 
 stream.on('message', function (tweet) {
@@ -54,61 +60,63 @@ stream.on('message', function (tweet) {
   // }
 
   // if the tweet has been deleted
-  var tweetNotDeleted = (tweet.user) ? true : false;
+  if (tweet.user) {
 
-  // twitter will stream user's tweets and others' retweets
-  // we only want the user's tweets
-  var notRetweet = (tweet.user.id == followee)
+    // twitter will stream user's tweets and others' retweets
+    // we only want the user's tweets
+    var notRetweet = (tweet.user.id == followee)
 
-  // we also want to ignore our target's @replies to others
-  var notAtReply = (tweet.text.slice(0,1) != '@')
+    // we also want to ignore our target's @replies to others
+    var notAtReply = (tweet.text.slice(0,1) != '@')
 
-  if (notRetweet && notAtReply && tweetNotDeleted) {
-    setTimeout(function() {
+    if (notRetweet && notAtReply) {
+      setTimeout(function() {
 
-      T.get('statuses/show/:id', { id: tweet.id_str }, function(err, tweet) {
-        if (err) console.log('ERROR FROM TWITTER: ' + err )
+        T.get('statuses/show/:id', { id: tweet.id_str }, function(err, tweet) {
+          if (err) console.log('ERROR FROM TWITTER: ' + err )
 
-        console.log('favCounts: ' + favCounts)
+          console.log('favCounts: ' + favCounts)
 
-        // pass array by value
-        var favCountsTmp = favCounts.slice()
+          // pass array by value
+          var favCountsTmp = favCounts.slice()
 
-        // sort the array numerically
-        favCountsTmp.sort(function(a,b) {return a - b})
+          // sort the array numerically
+          favCountsTmp.sort(function(a,b) {return a - b})
 
-        var numbertoBeatIndex = likesBuffer - (likesBuffer * tweetPercent)
+          var numbertoBeatIndex = likesBuffer - (likesBuffer * tweetPercent)
 
-        var numberToBeat = favCountsTmp[numbertoBeatIndex]
+          var numberToBeat = favCountsTmp[numbertoBeatIndex]
 
-        console.log('favCounts sorted: ' + favCountsTmp)
-        console.log('number to beat: ' + numberToBeat)
+          console.log('favCounts sorted: ' + favCountsTmp)
+          console.log('number to beat: ' + numberToBeat)
 
-        console.log(tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text.slice(0,40))
+          console.log(tweet.created_at + ' (' + tweet.favorite_count + '): ' + tweet.text.slice(0,40))
 
-        if (tweet.favorite_count >= numberToBeat) {
-          console.log(tweet.favorite_count + ' > ' + numberToBeat +'!: RETWEETED!')
+          if (tweet.favorite_count >= numberToBeat) {
+            console.log(tweet.favorite_count + ' > ' + numberToBeat +'!: RETWEETED!')
 
-          T.post('statuses/retweet/:id', { id: tweet.id_str }, function (err, data, response) {
-            if (err) console.log('Retweeting Error: ' + err)
-            console.log('Retweeting: ' + data)
-          })
+            T.post('statuses/retweet/:id', { id: tweet.id_str }, function (err, data, response) {
+              if (err) console.log('Retweeting Error: ' + err)
+              console.log('Retweeting: ' + data)
+            })
 
-        } else {
-          console.log(tweet.favorite_count + ' < ' + numberToBeat +'!: NOT RETWEETED')
-        }
+          } else {
+            console.log(tweet.favorite_count + ' < ' + numberToBeat +'!: NOT RETWEETED')
+          }
 
-        console.log('\n')
+          console.log('\n')
 
-        // add the new favorite and trim the stack
-        favCounts.push(tweet.favorite_count);
-        while (favCounts.length > likesBuffer) {
-          favCounts.splice(0, 1)
-        }
+          // add the new favorite and trim the stack
+          favCounts.push(tweet.favorite_count)
+          while (favCounts.length > likesBuffer) {
+            favCounts.splice(0, 1)
+          }
 
-      })
+        })
 
-    }, (5 * 60 * 1000)) // 5 minutes
+      }, (5 * 60 * 1000)) // 5 minutes
+    }
+
   }
 
 })
