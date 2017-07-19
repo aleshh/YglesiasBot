@@ -54,23 +54,25 @@ var stream = T.stream('statuses/filter', { follow: followee })
 
 stream.on('message', function (streamedTweet) {
 
-  try {
+  // if the tweet has been deleted
+  if (streamedTweet.user) {
 
-    // if the tweet has been deleted
-    if (streamedTweet.user) {
+    // twitter will stream user's tweets and others' retweets
+    // we only want the user's tweets
+    var notRetweet = (streamedTweet.user.id == followee)
 
-      // twitter will stream user's tweets and others' retweets
-      // we only want the user's tweets
-      var notRetweet = (streamedTweet.user.id == followee)
+    // we also want to ignore our target's @replies to others
+    var notAtReply = (streamedTweet.text.slice(0,1) != '@')
 
-      // we also want to ignore our target's @replies to others
-      var notAtReply = (streamedTweet.text.slice(0,1) != '@')
+    if (notRetweet && notAtReply) {
+      setTimeout(function() {
 
-      if (notRetweet && notAtReply) {
-        setTimeout(function() {
+        T.get('statuses/show/:id', { id: streamedTweet.id_str }, function(err, delayedTweet) {
+          if (err) {
+            console.log('ERROR FROM TWITTER: ' + err )
+          }
 
-          T.get('statuses/show/:id', { id: streamedTweet.id_str }, function(err, delayedTweet) {
-            if (err) console.log('ERROR FROM TWITTER: ' + err )
+          if (delayedTweet.text) {
 
             console.log('favCounts: ' + favCounts)
 
@@ -112,21 +114,14 @@ stream.on('message', function (streamedTweet) {
               favCounts.splice(0, 1)
             }
 
-          })
 
-        }, (5 * 60 * 1000)) // 5 minutes
-      }
+          }   // if (delayedTweet.text)
 
-    }
-  } // try
+        }) // T.get
 
-  catch (err) {
+      }, (5 * 60 * 1000)) // 5 minutes // setTimeout
+    } // if (notRetweet && notAtReply)
 
-    console.log('error')
-    console.log('streamedTweet: ' + streamedTweet)
-    console.log('delayedTweet: ' + delayedTweet)
+  } // if (streamedTweet.user)
 
-  }
-
-
-})
+}) // stream.on
