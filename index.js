@@ -54,67 +54,79 @@ var stream = T.stream('statuses/filter', { follow: followee })
 
 stream.on('message', function (streamedTweet) {
 
-  // if the tweet has been deleted
-  if (streamedTweet.user) {
+  try {
 
-    // twitter will stream user's tweets and others' retweets
-    // we only want the user's tweets
-    var notRetweet = (streamedTweet.user.id == followee)
+    // if the tweet has been deleted
+    if (streamedTweet.user) {
 
-    // we also want to ignore our target's @replies to others
-    var notAtReply = (streamedTweet.text.slice(0,1) != '@')
+      // twitter will stream user's tweets and others' retweets
+      // we only want the user's tweets
+      var notRetweet = (streamedTweet.user.id == followee)
 
-    if (notRetweet && notAtReply) {
-      setTimeout(function() {
+      // we also want to ignore our target's @replies to others
+      var notAtReply = (streamedTweet.text.slice(0,1) != '@')
 
-        T.get('statuses/show/:id', { id: streamedTweet.id_str }, function(err, delayedTweet) {
-          if (err) console.log('ERROR FROM TWITTER: ' + err )
+      if (notRetweet && notAtReply) {
+        setTimeout(function() {
 
-          console.log('favCounts: ' + favCounts)
+          T.get('statuses/show/:id', { id: streamedTweet.id_str }, function(err, delayedTweet) {
+            if (err) console.log('ERROR FROM TWITTER: ' + err )
 
-          // pass array by value
-          var favCountsTmp = favCounts.slice()
+            console.log('favCounts: ' + favCounts)
 
-          // sort the array numerically
-          favCountsTmp.sort(function(a,b) {return a - b})
+            // pass array by value
+            var favCountsTmp = favCounts.slice()
 
-          var numbertoBeatIndex = Math.floor(likesBuffer -
-                                            (likesBuffer * tweetPercent))
+            // sort the array numerically
+            favCountsTmp.sort(function(a,b) {return a - b})
 
-          var numberToBeat = favCountsTmp[numbertoBeatIndex]
+            var numbertoBeatIndex = Math.floor(likesBuffer -
+                                              (likesBuffer * tweetPercent))
 
-          console.log('favCounts sorted: ' + favCountsTmp)
-          console.log('number to beat: ' + numberToBeat)
+            var numberToBeat = favCountsTmp[numbertoBeatIndex]
 
-          console.log(delayedTweet.created_at + ' (' + delayedTweet.favorite_count + '): ' + delayedTweet.text.slice(0,40))
+            console.log('favCounts sorted: ' + favCountsTmp)
+            console.log('number to beat: ' + numberToBeat)
 
-          if (delayedTweet.favorite_count >= numberToBeat) {
-            console.log(delayedTweet.favorite_count + ' > ' +
-                        numberToBeat +'!: RETWEETED!')
+            console.log(delayedTweet.created_at + ' (' + delayedTweet.favorite_count + '): ' + delayedTweet.text.slice(0,40))
 
-            T.post('statuses/retweet/:id', { id: delayedTweet.id_str },
-                   function (err, data, response) {
-              if (err) console.log('Retweeting Error: ' + err)
-              console.log('Retweeting: ' + data)
-            })
+            if (delayedTweet.favorite_count >= numberToBeat) {
+              console.log(delayedTweet.favorite_count + ' > ' +
+                          numberToBeat +'!: RETWEETED!')
 
-          } else {
-            console.log(delayedTweet.favorite_count + ' < ' + numberToBeat +'!: NOT RETWEETED')
-          }
+              T.post('statuses/retweet/:id', { id: delayedTweet.id_str },
+                     function (err, data, response) {
+                if (err) console.log('Retweeting Error: ' + err)
+                console.log('Retweeting: ' + data)
+              })
 
-          console.log('\n')
+            } else {
+              console.log(delayedTweet.favorite_count + ' < ' + numberToBeat +'!: NOT RETWEETED')
+            }
 
-          // add the new favorite and trim the stack
-          favCounts.push(delayedTweet.favorite_count)
-          while (favCounts.length > likesBuffer) {
-            favCounts.splice(0, 1)
-          }
+            console.log('\n')
 
-        })
+            // add the new favorite and trim the stack
+            favCounts.push(delayedTweet.favorite_count)
+            while (favCounts.length > likesBuffer) {
+              favCounts.splice(0, 1)
+            }
 
-      }, (5 * 60 * 1000)) // 5 minutes
+          })
+
+        }, (5 * 60 * 1000)) // 5 minutes
+      }
+
     }
+  } // try
+
+  catch (err) {
+
+    console.log('error')
+    console.log('streamedTweet: ' + streamedTweet)
+    console.log('delayedTweet: ' + delayedTweet)
 
   }
+
 
 })
