@@ -34,7 +34,7 @@ var tweetPercent = .2
 var likesBuffer = 8
 
 // value for initial buffer population
-var initialLikeThreshold = 80
+var initialLikeThreshold = 0
 
 // populate the buffer
 // var favCounts = Array(likesBuffer).fill(initialLikeThreshold)
@@ -115,7 +115,7 @@ stream.on('message', function (streamedTweet) {
               T.post('statuses/retweet/:id', { id: delayedTweet.id_str },
                      function (err, data, response) {
                 if (err) console.log('Retweeting Error: ' + err)
-                console.log('Retweeting: ' + data)
+                console.log('Retweeting: ' + Object.getOwnPropertyNames(data))
               })
 
             } else {
