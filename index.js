@@ -89,7 +89,7 @@ stream.on('message', function (streamedTweet) {
 
             for (var i = 1; i <= favCounts.length; i++) {
               for (var j = 0; j < i; j++) {
-                favCountsTmp.push(a[i-1])
+                favCountsTmp.push(favCounts[i-1])
               }
             }
 
