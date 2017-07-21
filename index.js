@@ -37,7 +37,8 @@ var likesBuffer = 8
 var initialLikeThreshold = 80
 
 // populate the buffer
-var favCounts = Array(likesBuffer).fill(initialLikeThreshold)
+// var favCounts = Array(likesBuffer).fill(initialLikeThreshold)
+var favCounts = [initialLikeThreshold];
 
 var T = new Twit({
   consumer_key:         cred.consumer_key,
@@ -76,14 +77,29 @@ stream.on('message', function (streamedTweet) {
 
             console.log('favCounts: ' + favCounts)
 
-            // pass array by value
-            var favCountsTmp = favCounts.slice()
+            // // pass array by value
+            // var favCountsTmp = favCounts.slice()
+
+            var favCountsTmp = []
+
+            // We're going to make an array that has the first value once, the
+            // second value twice, and so on. This way when we take the X
+            // position, more recent values will be more highly valued than
+            // older values:
+
+            for (var i = 1; i <= favCounts.length; i++) {
+              for (var j = 0; j < i; j++) {
+                favCountsTmp.push(a[i-1])
+              }
+            }
+
+            favCountsTmpLength = favCountsTmp.length
 
             // sort the array numerically
             favCountsTmp.sort(function(a,b) {return a - b})
 
-            var numbertoBeatIndex = Math.floor(likesBuffer -
-                                              (likesBuffer * tweetPercent))
+            var numbertoBeatIndex = Math.floor(favCountsTmpLength -
+                                      (favCountsTmpLength * tweetPercent))
 
             var numberToBeat = favCountsTmp[numbertoBeatIndex]
 
