@@ -90,7 +90,7 @@ stream.on('message', function (streamedTweet) {
             console.log('favCounts sorted: ' + favCountsTmp)
             console.log('number to beat: ' + numberToBeat)
 
-            console.log(delayedTweet.created_at + ' (' + delayedTweet.favorite_count + '): ' + delayedTweet.text.slice(0,40))
+            console.log(delayedTweet.created_at + ' (' + delayedTweet.favorite_count + '):\n' + delayedTweet.text)
 
             if (delayedTweet.favorite_count >= numberToBeat) {
               console.log(delayedTweet.favorite_count + ' > ' +
@@ -106,7 +106,7 @@ stream.on('message', function (streamedTweet) {
               console.log(delayedTweet.favorite_count + ' < ' + numberToBeat +'!: NOT RETWEETED')
             }
 
-            console.log('\n')
+            console.log('')
 
             // add the new favorite and trim the stack
             favCounts.push(delayedTweet.favorite_count)
