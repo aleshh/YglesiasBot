@@ -31,7 +31,7 @@ var followee = 15446531  // matt yglesias
 var tweetPercent = .2
 
 // the larger the buffer the slower the responsiveness to time of day etc.
-var likesBuffer = 8
+var likesBuffer = 5
 
 // value for initial buffer population
 var initialLikeThreshold = 0
