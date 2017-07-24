@@ -81,7 +81,6 @@ stream.on('message', function (streamedTweet) {
 
             favCountsWeightedLength = favCountsWeighted.length
 
-
             var numbertoBeatIndex = Math.floor(favCountsWeightedLength -
                                       (favCountsWeightedLength * tweetPercent))
 
@@ -96,11 +95,13 @@ stream.on('message', function (streamedTweet) {
               console.log(delayedTweet.favorite_count + ' > ' +
                           numberToBeat +'!: RETWEETED!')
 
-              T.post('statuses/retweet/:id', { id: delayedTweet.id_str },
-                     function (err, data, response) {
-                if (err) console.log('Retweeting Error: ' + err)
-                console.log('Retweeting: ' + Object.getOwnPropertyNames(data))
-              })
+              retweetTweet(delayedTweet.id_str)
+
+              // T.post('statuses/retweet/:id', { id: delayedTweet.id_str },
+              //        function (err, data, response) {
+              //   if (err) console.log('Retweeting Error: ' + err)
+              //   console.log('Retweeting: ' + Object.getOwnPropertyNames(data))
+              // })
 
             } else {
               console.log(delayedTweet.favorite_count + ' < ' + numberToBeat +'!: NOT RETWEETED')
@@ -126,22 +127,29 @@ stream.on('message', function (streamedTweet) {
 
 }) // stream.on
 
-function calculateWeightedArray(favCounts) {
+function retweetTweet(id) {
+  T.post('statuses/retweet/:id', { id: id }, function (err, data, response) {
+    if (err) console.log('Retweeting Error: ' + err)
+    console.log('Retweeting: ' + Object.getOwnPropertyNames(data))
+  })
+}
 
+function calculateWeightedArray(favCounts) {
   let favCountsWeighted = []
 
   // We're going to make an array that has the first value once, the
   // second value twice, and so on. This way when we take the X
   // position, more recent values will be more highly valued than
-  // older values:
+  // older values
   for (var i = 1; i <= favCounts.length; i++) {
     for (var j = 0; j < i; j++) {
       favCountsWeighted.push(favCounts[i-1])
     }
   }
 
-  // sort the array numerically
-  favCountsWeighted.sort(function(a,b) {return a - b})
+  return sortArrayNumerically(favCountsWeighted)
+}
 
-  return favCountsWeighted;
+function sortArrayNumerically (array) {
+    return array.sort(function(a,b) {return a - b})
 }
