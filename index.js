@@ -77,33 +77,17 @@ stream.on('message', function (streamedTweet) {
 
             console.log('favCounts: ' + favCounts)
 
-            // // pass array by value
-            // var favCountsTmp = favCounts.slice()
+            var favCountsWeighted = calculateWeightedArray(favCounts)
 
-            var favCountsTmp = []
+            favCountsWeightedLength = favCountsWeighted.length
 
-            // We're going to make an array that has the first value once, the
-            // second value twice, and so on. This way when we take the X
-            // position, more recent values will be more highly valued than
-            // older values:
 
-            for (var i = 1; i <= favCounts.length; i++) {
-              for (var j = 0; j < i; j++) {
-                favCountsTmp.push(favCounts[i-1])
-              }
-            }
+            var numbertoBeatIndex = Math.floor(favCountsWeightedLength -
+                                      (favCountsWeightedLength * tweetPercent))
 
-            favCountsTmpLength = favCountsTmp.length
+            var numberToBeat = favCountsWeighted[numbertoBeatIndex]
 
-            // sort the array numerically
-            favCountsTmp.sort(function(a,b) {return a - b})
-
-            var numbertoBeatIndex = Math.floor(favCountsTmpLength -
-                                      (favCountsTmpLength * tweetPercent))
-
-            var numberToBeat = favCountsTmp[numbertoBeatIndex]
-
-            console.log('favCounts sorted: ' + favCountsTmp)
+            console.log('favCounts sorted: ' + favCountsWeighted)
             console.log('number to beat: ' + numberToBeat)
 
             console.log(delayedTweet.created_at + ' (' + delayedTweet.favorite_count + '):\n' + delayedTweet.text)
@@ -141,3 +125,23 @@ stream.on('message', function (streamedTweet) {
   } // if (streamedTweet.user)
 
 }) // stream.on
+
+function calculateWeightedArray(favCounts) {
+
+  let favCountsWeighted = []
+
+  // We're going to make an array that has the first value once, the
+  // second value twice, and so on. This way when we take the X
+  // position, more recent values will be more highly valued than
+  // older values:
+  for (var i = 1; i <= favCounts.length; i++) {
+    for (var j = 0; j < i; j++) {
+      favCountsWeighted.push(favCounts[i-1])
+    }
+  }
+
+  // sort the array numerically
+  favCountsWeighted.sort(function(a,b) {return a - b})
+
+  return favCountsWeighted;
+}
