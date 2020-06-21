@@ -23,108 +23,171 @@ var Twit = require('twit')
 var cred = require('./credentials.js')
 var util = require('util')
 
+const devKeywords = [
+  'css',
+  'html',
+  'javascript',
+  'development',
+  'react',
+  'frontend',
+  'dev',
+  'agile',
+  'git',
+  'php',
+  'design',
+  'code',
+  'website',
+  'vscode',
+  'deploy',
+  'facebook',
+  'work',
+  'fb',
+  'error',
+]
 
-// twitter ID
-var followee = 15446531  // matt yglesias
+// // twitter ID
+// var followee = 15446531 // matt yglesias
 
-// in the long run, should tweet this percent of the user's tweets
-var tweetPercent = .2
+// // in the long run, should tweet this percent of the user's tweets
+// // var tweetPercent = 0.2
+
+// // value for initial buffer population
+// var initialLikeThreshold = 0
+
+// // populate the buffer
+// // var favCounts = Array(likesBuffer).fill(initialLikeThreshold)
+// var favCounts = [initialLikeThreshold]
 
 // the larger the buffer the slower the responsiveness to time of day etc.
 var likesBuffer = 5
 
-// value for initial buffer population
-var initialLikeThreshold = 0
-
-// populate the buffer
-// var favCounts = Array(likesBuffer).fill(initialLikeThreshold)
-var favCounts = [initialLikeThreshold];
+const users = [
+  {
+    name: 'Matt Yglesias',
+    screenName: 'mattyglesias',
+    id: 15446531,
+    tweetPercent: 0.4,
+    doRetweets: true,
+    keywords: [],
+    favCounts: [0],
+  },
+  {
+    name: 'Laura González',
+    screenName: 'freezydorito',
+    id: 3004020255,
+    tweetPercent: 0.1,
+    doRetweets: true,
+    keywords: devKeywords,
+    favCounts: [0],
+  },
+  {
+    name: 'Christopher Mims',
+    screenName: 'mims',
+    id: 1769191,
+    tweetPercent: 0.8,
+    doRetweets: true,
+    keywords: [],
+    favCounts: [0],
+  },
+]
 
 var T = new Twit({
-  consumer_key:         cred.consumer_key,
-  consumer_secret:      cred.consumer_secret,
-  access_token:         cred.access_token,
-  access_token_secret:  cred.access_token_secret,
-  timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
+  consumer_key: cred.consumer_key,
+  consumer_secret: cred.consumer_secret,
+  access_token: cred.access_token,
+  access_token_secret: cred.access_token_secret,
+  timeout_ms: 60 * 1000, // optional HTTP request timeout to apply to all requests.
 })
 
-//run on startup
-console.log('\n\nYglesias Bot: up and running\n\n')
+console.log(`\n\nYglesias Bot: up and running at ${getTime()}\n\n`)
 
-var stream = T.stream('statuses/filter', { follow: followee })
+var stream = T.stream('statuses/filter', {
+  follow: users.map((user) => user.id),
+})
 
 stream.on('message', function (streamedTweet) {
+  if (!streamedTweet.user) return // tweet has been deleted
 
-  // if the tweet has been deleted
-  if (streamedTweet.user) {
+  const user = users.find((user) => user.id == streamedTweet.user.id)
+  const isReply = streamedTweet.text.slice(0, 1) === '@'
 
-    // twitter will stream user's tweets and others' retweets
-    // we only want the user's tweets
-    var notRetweet = (streamedTweet.user.id == followee)
+  if (!user) return // for now we're ignoring retweets
 
-    // we also want to ignore our target's @replies to others
-    var notAtReply = (streamedTweet.text.slice(0,1) != '@')
+  if (isReply) return
+  console.log('>> is not an @')
 
-    if (notRetweet && notAtReply) {
-      setTimeout(function() {
+  console.log(`>> It's not a reply, so we're starting 5-minute wait`)
 
-        T.get('statuses/show/:id', { id: streamedTweet.id_str }, function(err, delayedTweet) {
-          if (err) {
-            console.log('ERROR FROM TWITTER: ' + err )
-          }
+  setTimeout(function () {
+    T.get('statuses/show/:id', { id: streamedTweet.id_str }, function (
+      err,
+      delayedTweet
+    ) {
+      if (err) {
+        console.log('>> ERROR FROM TWITTER: ' + err)
+      }
+      if (!delayedTweet.text) {
+        console.log('>> Tweet deleted')
+        return
+      }
 
-          if (delayedTweet.text) {
+      const { name, id, tweetPercent, keywords, favCounts } = user
 
-            console.log('favCounts: ' + favCounts)
+      console.log('>>>>> 5 minutes later, New tweet from ', name)
 
-            var favCountsWeighted = calculateWeightedArray(favCounts)
+      var favCountsWeighted = calculateWeightedArray(favCounts)
 
-            favCountsWeightedLength = favCountsWeighted.length
+      favCountsWeightedLength = favCountsWeighted.length
 
-            var numbertoBeatIndex = Math.floor(favCountsWeightedLength -
-                                      (favCountsWeightedLength * tweetPercent))
+      var numbertoBeatIndex = Math.floor(
+        favCountsWeightedLength - favCountsWeightedLength * tweetPercent
+      )
 
-            var numberToBeat = favCountsWeighted[numbertoBeatIndex]
+      var numberToBeat = favCountsWeighted[numbertoBeatIndex]
 
-            console.log('favCounts sorted: ' + favCountsWeighted)
-            console.log('number to beat: ' + numberToBeat)
+      const includedKeyword = keywords.find((word) =>
+        delayedTweet.extended_tweet.full_text.includes(word)
+      )
 
-            console.log(delayedTweet.created_at + ' (' + delayedTweet.favorite_count + '):\n' + delayedTweet.text)
+      console.log('>>>>> favCounts sorted: ' + favCountsWeighted)
+      console.log('>>>>> number to beat: ' + numberToBeat)
 
-            if (delayedTweet.favorite_count >= numberToBeat) {
-              console.log(delayedTweet.favorite_count + ' > ' +
-                          numberToBeat +'!: RETWEETED!')
+      console.log(
+        delayedTweet.created_at +
+          ' (' +
+          delayedTweet.favorite_count +
+          '):\n' +
+          delayedTweet.text
+      )
 
-              retweetTweet(delayedTweet.id_str)
+      if (delayedTweet.favorite_count >= numberToBeat) {
+        console.log(
+          delayedTweet.favorite_count + ' > ' + numberToBeat + '!: RETWEETED!'
+        )
 
-              // T.post('statuses/retweet/:id', { id: delayedTweet.id_str },
-              //        function (err, data, response) {
-              //   if (err) console.log('Retweeting Error: ' + err)
-              //   console.log('Retweeting: ' + Object.getOwnPropertyNames(data))
-              // })
+        retweetTweet(delayedTweet.id_str)
+      } else if (includedKeyword) {
+        console.log('tweet includes keyword', includedKeyword)
 
-            } else {
-              console.log(delayedTweet.favorite_count + ' < ' + numberToBeat +'!: NOT RETWEETED')
-            }
+        retweetTweet(delayedTweet.id_str)
+      } else {
+        console.log(
+          delayedTweet.favorite_count +
+            ' < ' +
+            numberToBeat +
+            '!: NOT RETWEETED'
+        )
+      }
 
-            console.log('')
+      console.log('\n')
 
-            // add the new favorite and trim the stack
-            favCounts.push(delayedTweet.favorite_count)
-            while (favCounts.length > likesBuffer) {
-              favCounts.splice(0, 1)
-            }
-
-
-          }   // if (delayedTweet.text)
-
-        }) // T.get
-
-      }, (5 * 60 * 1000)) // 5 minutes // setTimeout
-    } // if (notRetweet && notAtReply)
-
-  } // if (streamedTweet.user)
-
+      // add the new favorite and trim the stack
+      favCounts.push(delayedTweet.favorite_count)
+      while (favCounts.length > likesBuffer) {
+        favCounts.splice(0, 1)
+      }
+    }) // T.get
+  }, 5 * 60 * 1000) // 5 minutes // setTimeout
 }) // stream.on
 
 function retweetTweet(id) {
@@ -143,13 +206,19 @@ function calculateWeightedArray(favCounts) {
   // older values
   for (var i = 1; i <= favCounts.length; i++) {
     for (var j = 0; j < i; j++) {
-      favCountsWeighted.push(favCounts[i-1])
+      favCountsWeighted.push(favCounts[i - 1])
     }
   }
 
   return sortArrayNumerically(favCountsWeighted)
 }
 
-function sortArrayNumerically (array) {
-    return array.sort(function(a,b) {return a - b})
+function sortArrayNumerically(array) {
+  return array.sort(function (a, b) {
+    return a - b
+  })
+}
+
+function getTime() {
+  return new Date().toLocaleString()
 }
