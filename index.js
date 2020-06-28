@@ -112,11 +112,7 @@ stream.on('message', function (streamedTweet) {
   const isReply = streamedTweet.text.slice(0, 1) === '@'
 
   if (!user) return // for now we're ignoring retweets
-
   if (isReply) return
-  console.log('>> is not an @')
-
-  console.log(`>> It's not a reply, so we're starting 5-minute wait`)
 
   setTimeout(function () {
     T.get('statuses/show/:id', { id: streamedTweet.id_str }, function (
@@ -133,8 +129,6 @@ stream.on('message', function (streamedTweet) {
 
       const { name, id, tweetPercent, keywords, favCounts } = user
 
-      console.log('>>>>> 5 minutes later, New tweet from ', name)
-
       var favCountsWeighted = calculateWeightedArray(favCounts)
 
       favCountsWeightedLength = favCountsWeighted.length
@@ -145,12 +139,11 @@ stream.on('message', function (streamedTweet) {
 
       var numberToBeat = favCountsWeighted[numbertoBeatIndex]
 
-      const includedKeyword = keywords.find((word) =>
-        delayedTweet.extended_tweet.full_text.includes(word)
+      const includedKeyword = keywords.find(
+        (word) =>
+          delayedTweet.extended_tweet &&
+          delayedTweet.extended_tweet.full_text.includes(word)
       )
-
-      console.log('>>>>> favCounts sorted: ' + favCountsWeighted)
-      console.log('>>>>> number to beat: ' + numberToBeat)
 
       console.log(
         delayedTweet.created_at +
@@ -160,6 +153,14 @@ stream.on('message', function (streamedTweet) {
           delayedTweet.text
       )
 
+      console.log(
+        'number to beat:',
+        numberToBeat,
+        '(favCounts sorted:',
+        favCountsWeighted,
+        ')'
+      )
+
       if (delayedTweet.favorite_count >= numberToBeat) {
         console.log(
           delayedTweet.favorite_count + ' > ' + numberToBeat + '!: RETWEETED!'
@@ -167,7 +168,7 @@ stream.on('message', function (streamedTweet) {
 
         retweetTweet(delayedTweet.id_str)
       } else if (includedKeyword) {
-        console.log('tweet includes keyword', includedKeyword)
+        console.log('tweet includes keyword', includedKeyword, '!:RETWEETED!')
 
         retweetTweet(delayedTweet.id_str)
       } else {
