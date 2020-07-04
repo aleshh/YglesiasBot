@@ -45,20 +45,6 @@ const devKeywords = [
   'error',
 ]
 
-// // twitter ID
-// var followee = 15446531 // matt yglesias
-
-// // in the long run, should tweet this percent of the user's tweets
-// // var tweetPercent = 0.2
-
-// // value for initial buffer population
-// var initialLikeThreshold = 0
-
-// // populate the buffer
-// // var favCounts = Array(likesBuffer).fill(initialLikeThreshold)
-// var favCounts = [initialLikeThreshold]
-
-// the larger the buffer the slower the responsiveness to time of day etc.
 var likesBuffer = 5
 
 const users = [
