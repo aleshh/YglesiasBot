@@ -147,6 +147,8 @@ stream.on('message', function (streamedTweet) {
         ')'
       )
 
+      console.log('\n\n>>>\n${delayedTweet\n\n')
+
       if (delayedTweet.favorite_count >= numberToBeat) {
         console.log(
           delayedTweet.favorite_count + ' > ' + numberToBeat + '!: RETWEETED!'
