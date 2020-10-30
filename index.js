@@ -52,25 +52,34 @@ const users = [
     name: 'Matt Yglesias',
     screenName: 'mattyglesias',
     id: 15446531,
-    tweetPercent: 0.4,
+    tweetRatio: 0.4,
+    doRetweets: true,
+    keywords: [],
+    favCounts: [0],
+  },
+  // {
+  //   name: 'Laura González',
+  //   screenName: 'freezydorito',
+  //   id: 3004020255,
+  //   tweetRatio: 0.1,
+  //   doRetweets: true,
+  //   keywords: devKeywords,
+  //   favCounts: [0],
+  // },
+  {
+    name: 'Christopher Mims',
+    screenName: 'mims',
+    id: 1769191,
+    tweetRatio: 0.6,
     doRetweets: true,
     keywords: [],
     favCounts: [0],
   },
   {
-    name: 'Laura González',
-    screenName: 'freezydorito',
-    id: 3004020255,
-    tweetPercent: 0.1,
-    doRetweets: true,
-    keywords: devKeywords,
-    favCounts: [0],
-  },
-  {
-    name: 'Christopher Mims',
-    screenName: 'mims',
-    id: 1769191,
-    tweetPercent: 0.8,
+    name: 'Present & Correct',
+    screenName: 'presentcorrect',
+    id: 20228975,
+    tweetRatio: 0.4,
     doRetweets: true,
     keywords: [],
     favCounts: [0],
@@ -85,10 +94,12 @@ var T = new Twit({
   timeout_ms: 60 * 1000, // optional HTTP request timeout to apply to all requests.
 })
 
-console.log(`\n\nYglesias Bot: up and running at ${getTime()}\n\n`)
+console.log(`\n\nb
+Yglesias Bot: up and running at ${getTime()}\n\n`)
 
 var stream = T.stream('statuses/filter', {
   follow: users.map((user) => user.id),
+  tweet_mode: 'extended',
 })
 
 stream.on('message', function (streamedTweet) {
@@ -113,14 +124,14 @@ stream.on('message', function (streamedTweet) {
         return
       }
 
-      const { name, id, tweetPercent, keywords, favCounts } = user
+      const { name, id, tweetRatio, keywords, favCounts } = user
 
       var favCountsWeighted = calculateWeightedArray(favCounts)
 
       favCountsWeightedLength = favCountsWeighted.length
 
       var numbertoBeatIndex = Math.floor(
-        favCountsWeightedLength - favCountsWeightedLength * tweetPercent
+        favCountsWeightedLength - favCountsWeightedLength * tweetRatio
       )
 
       var numberToBeat = favCountsWeighted[numbertoBeatIndex]
@@ -138,6 +149,7 @@ stream.on('message', function (streamedTweet) {
           '):\n' +
           delayedTweet.text
       )
+      console.log('extended_tweet', delayedTweet.extended_tweet)
 
       console.log(
         'number to beat:',
@@ -147,7 +159,7 @@ stream.on('message', function (streamedTweet) {
         ')'
       )
 
-      console.log('\n\n>>>\n${delayedTweet\n\n')
+      console.log(`\n\n>>>\n${delayedTweet}\n\n`)
 
       if (delayedTweet.favorite_count >= numberToBeat) {
         console.log(
