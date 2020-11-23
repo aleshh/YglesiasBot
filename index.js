@@ -57,15 +57,6 @@ const users = [
     keywords: [],
     favCounts: [0],
   },
-  // {
-  //   name: 'Laura González',
-  //   screenName: 'freezydorito',
-  //   id: 3004020255,
-  //   tweetRatio: 0.1,
-  //   doRetweets: true,
-  //   keywords: devKeywords,
-  //   favCounts: [0],
-  // },
   {
     name: 'Christopher Mims',
     screenName: 'mims',
@@ -159,7 +150,8 @@ stream.on('message', function (streamedTweet) {
         ')'
       )
 
-      console.log(`\n\n>>>\n${delayedTweet}\n\n`)
+      console.log(`\n\n>>>\nTweet object:\n\n`)
+      console.log(delayedTweet)
 
       if (delayedTweet.favorite_count >= numberToBeat) {
         console.log(
@@ -192,10 +184,15 @@ stream.on('message', function (streamedTweet) {
 }) // stream.on
 
 function retweetTweet(id) {
-  T.post('statuses/retweet/:id', { id: id }, function (err, data, response) {
-    if (err) console.log('Retweeting Error: ' + err)
-    console.log('Retweeting: ' + Object.getOwnPropertyNames(data))
-  })
+  try {
+    T.post('statuses/retweet/:id', { id: id }, function (err, data, response) {
+      if (err) console.log('Retweeting Error: ' + err)
+      console.log('Retweeting: ' + Object.getOwnPropertyNames(data))
+    })
+  } catch (e) {
+    console.log('Caught error')
+    console.log(e)
+  }
 }
 
 function calculateWeightedArray(favCounts) {
